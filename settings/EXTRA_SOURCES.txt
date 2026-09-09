@@ -1,4 +1,4 @@
-﻿# OBSback v1.3.1 — EXTRA_SOURCES.txt
+﻿# OBSback v1.3.2 — EXTRA_SOURCES.txt
 #
 # Обычно этот файл можно оставить как есть.
 #

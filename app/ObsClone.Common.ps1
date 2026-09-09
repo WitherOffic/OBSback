@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.1 - Common library
+# OBS Full Clone Tool v1.3.2 - Common library
 # Windows PowerShell 5.1 compatible.
 
 Set-StrictMode -Version 2.0

@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.1 - Verify extracted backup
+# OBS Full Clone Tool v1.3.2 - Verify extracted backup
 
 param([string]$BackupRoot = $PSScriptRoot)
 
@@ -12,7 +12,7 @@ try {
         if ([string]::IsNullOrWhiteSpace($BackupRoot) -or $BackupRoot.Trim() -match '^(?i:q|quit|exit)$') { exit 0 }
         $BackupRoot = $BackupRoot.Trim().Trim('"').Trim("'")
     }
-    Write-Info "=== OBS FULL CLONE v1.3.1: ПРОВЕРКА BACKUP ==="
+    Write-Info "=== OBS FULL CLONE v1.3.2: ПРОВЕРКА BACKUP ==="
     Show-OverallProgress 2 "Проверка структуры и SHA-256"
 
     $result = Verify-BackupPackage `

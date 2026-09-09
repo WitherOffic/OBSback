@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.1 - Non-destructive self test
+# OBS Full Clone Tool v1.3.2 - Non-destructive self test
 param([switch]$Detailed)
 
 $ErrorActionPreference = "Stop"
@@ -87,7 +87,7 @@ function Pass([string]$Message) {
 }
 
 try {
-    Write-Host "OBS Full Clone v1.3.1 - self-test" -ForegroundColor Cyan
+    Write-Host "OBS Full Clone v1.3.2 - self-test" -ForegroundColor Cyan
 
     if ($PSVersionTable.PSVersion.Major -lt 5) {
         Fail "Требуется Windows PowerShell 5.1+."
@@ -540,8 +540,8 @@ try {
             (Join-Path $PSScriptRoot $releaseFile)
         )
 
-        if ($releaseText -notmatch [regex]::Escape("v1.3.1")) {
-            Fail "Версия v1.3.1 не найдена в $releaseFile"
+        if ($releaseText -notmatch [regex]::Escape("v1.3.2")) {
+            Fail "Версия v1.3.2 не найдена в $releaseFile"
         }
 
         if ($releaseText -match $legacyPattern) {
@@ -549,7 +549,7 @@ try {
         }
     }
 
-    Pass "release version 1.3.1 everywhere"
+    Pass "release version 1.3.2 everywhere"
 
 
 

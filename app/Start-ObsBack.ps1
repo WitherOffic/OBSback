@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBSback v1.3.1 - Launcher
+# OBSback v1.3.2 - Launcher
 param(
     [ValidateSet('Menu','Backup','Restore','Verify','SelfTest')]
     [string]$Action = 'Menu',
@@ -50,7 +50,7 @@ try {
     }
     while ($true) {
         Write-Host ''
-        Write-Info '================ OBSback v1.3.1 ================'
+        Write-Info '================ OBSback v1.3.2 ================'
         Write-Host '  1  Создать бекап'
         Write-Host '  2  Восстановить бекап'
         Write-Host '  3  Проверить бекап'
@@ -72,7 +72,6 @@ try {
             default { Write-Warn 'Введите число от 0 до 5.'; continue }
         }
         if ($script:ActionExitCode -ne 0) { Write-Warn "Действие завершилось с кодом $script:ActionExitCode." }
-        [void](Read-Host 'Нажмите Enter, чтобы вернуться в меню')
     }
 }
 catch {

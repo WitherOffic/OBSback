@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.1 - Restore
+# OBS Full Clone Tool v1.3.2 - Restore
 
 . (Join-Path $PSScriptRoot "ObsClone.Common.ps1")
 
@@ -350,7 +350,7 @@ if (-not (Test-IsAdministrator)) {
 }
 
 try {
-    Write-Info "=== OBS FULL CLONE v1.3.1: ВОССТАНОВЛЕНИЕ ==="
+    Write-Info "=== OBS FULL CLONE v1.3.2: ВОССТАНОВЛЕНИЕ ==="
 
 
     Show-AuthorSupportBlock
@@ -727,7 +727,7 @@ try {
         if (-not (Test-Path -LiteralPath $portableMarker -PathType Leaf)) {
             [IO.File]::WriteAllText(
                 $portableMarker,
-                "OBS Full Clone v1.3.1 portable restore`r`n",
+                "OBS Full Clone v1.3.2 portable restore`r`n",
                 (New-Object Text.UTF8Encoding($false))
             )
         }

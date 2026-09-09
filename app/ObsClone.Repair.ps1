@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.1 - Missing-reference diagnostics and repair
+# OBS Full Clone Tool v1.3.2 - Missing-reference diagnostics and repair
 
 Set-StrictMode -Version 2.0
 
@@ -420,7 +420,7 @@ function Get-ObsMissingReferenceReportLines(
 ) {
     $lines = New-Object System.Collections.ArrayList
 
-    [void]$lines.Add("OBS Full Clone v1.3.1")
+    [void]$lines.Add("OBS Full Clone v1.3.2")
     [void]$lines.Add("")
     [void]$lines.Add("Отсутствующие локальные ссылки:")
     [void]$lines.Add("")

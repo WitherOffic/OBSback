@@ -6,10 +6,10 @@ $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $OutputDirectory = Join-Path $repoRoot 'dist' }
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
-$releaseName = 'OBSback-v1.3.1'
+$releaseName = 'OBSback-v1.3.2'
 $zipPath = Join-Path $outputRoot ($releaseName + '.zip')
 $report = New-Object System.Collections.Generic.List[string]
-$report.Add('OBSback v1.3.1 - Windows PowerShell ' + $PSVersionTable.PSVersion)
+$report.Add('OBSback v1.3.2 - Windows PowerShell ' + $PSVersionTable.PSVersion)
 $report.Add('Date: ' + (Get-Date).ToString('o'))
 $utf8 = New-Object Text.UTF8Encoding($true)
 $testRoot = Join-Path $outputRoot ('build-test-' + [Guid]::NewGuid().ToString('N'))
@@ -114,8 +114,11 @@ try {
     Assert-Test (($rootEntries -join '|') -eq 'app|OBSback.bat|README.txt|settings') 'exactly four root entries in distribution'
     $packedTest = Invoke-CheckedProcess 'powershell.exe' ('-NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $packedRoot 'app\Start-ObsBack.ps1') + '" -Action SelfTest')
     Assert-Test ($packedTest.Contains('Проверка пройдена. Ошибок нет.')) 'extracted launcher: Cyrillic, spaces and ampersand path'
-    $menuLog = Invoke-CheckedProcess $env:ComSpec ('/d /c ""' + (Join-Path $packedRoot 'OBSback.bat') + '""') '0'
-    Assert-Test ($menuLog.Contains('OBSback v1.3.1')) 'root BAT opens menu and exits cleanly'
+    $menuLog = Invoke-CheckedProcess $env:ComSpec ('/d /c ""' + (Join-Path $packedRoot 'OBSback.bat') + '""') "4`r`n0"
+    Assert-Test ($menuLog.Contains('OBSback v1.3.2')) 'root BAT opens menu and exits cleanly'
+    Assert-Test ($menuLog.Contains('Проверка пройдена. Ошибок нет.')) 'menu self-test completes before accepting next choice'
+    Assert-Test ($menuLog -notmatch 'Нажмите Enter, чтобы вернуться') 'menu never consumes the next numbered choice as a pause'
+    Assert-Test ([regex]::Matches($menuLog,'================ OBSback v1.3.2 ================').Count -eq 2) 'one choice triggers one action and returns directly to menu'
     $invalidBackup = Join-Path $testRoot 'invalid backup'
     New-Item -ItemType Directory -Path $invalidBackup | Out-Null
     $null = Invoke-CheckedProcess 'powershell.exe' ('-NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $packedRoot 'app\Start-ObsBack.ps1') + '" -Action Verify -BackupPath "' + $invalidBackup + '"') '' 1
