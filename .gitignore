@@ -1,0 +1,5 @@
+/dist/
+*.log
+OBS_BACKUP_*/
+*.zip
+*.zip.sha256
