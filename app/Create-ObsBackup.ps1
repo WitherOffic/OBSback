@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.0 - Create backup
+# OBS Full Clone Tool v1.3.1 - Create backup
 
 . (Join-Path $PSScriptRoot "ObsClone.Common.ps1")
 . (Join-Path $PSScriptRoot "ObsClone.Repair.ps1")
@@ -814,7 +814,7 @@ function New-StoredReferenceName(
 }
 
 try {
-    Write-Info "=== OBS FULL CLONE v1.3.0: СОЗДАНИЕ BACKUP ==="
+    Write-Info "=== OBS FULL CLONE v1.3.1: СОЗДАНИЕ BACKUP ==="
     Show-AuthorSupportBlock
     Show-OverallProgress 1 "Определение OBS"
 
@@ -1641,7 +1641,7 @@ try {
     $sourcePlanReport = Join-Path $IncompleteRoot "SOURCE_PLAN.txt"
 
     @(
-        "OBS Full Clone v1.3.0",
+        "OBS Full Clone v1.3.1",
         "",
         "Файлы/папки, которые будут скопированы в Sources:",
         ""
@@ -1772,7 +1772,7 @@ try {
     Show-OverallProgress 70 "Формирование manifest"
 
     $sourceMapLines = @(
-        "OBS FULL CLONE v1.3.0 - SOURCE MAP",
+        "OBS FULL CLONE v1.3.1 - SOURCE MAP",
         "Создан: $((Get-Date).ToString('o'))",
         "",
         "СТАРЫЙ ПУТЬ -> ПУТЬ В BACKUP",
@@ -1795,7 +1795,7 @@ try {
     $RemotePath = Join-Path $IncompleteRoot "REMOTE_DEPENDENCIES.txt"
 
     @(
-        "OBS FULL CLONE v1.3.0 - REMOTE DEPENDENCIES",
+        "OBS FULL CLONE v1.3.1 - REMOTE DEPENDENCIES",
         "",
         "Эти URL найдены в конфигурации OBS.",
         "Они не являются локальными файлами и требуют сети/доступности сервиса.",
@@ -1806,7 +1806,7 @@ try {
     $SourcesHelpPath = Join-Path $IncompleteRoot "SOURCES_README.txt"
 
     @"
-OBS Full Clone v1.3.0 - Sources
+OBS Full Clone v1.3.1 - Sources
 =============================
 
 Все обнаруженные локальные файлы/папки, которые использовал OBS,
@@ -1851,7 +1851,7 @@ SOURCE_MAP.txt показывает старый путь и его место �
     )
 
     $Manifest = [PSCustomObject]@{
-        ToolVersion = "1.3.0"
+        ToolVersion = "1.3.1"
         CreatedAt = (Get-Date).ToString("o")
         ComputerName = $env:COMPUTERNAME
         OriginalUserProfile = $env:USERPROFILE
@@ -1884,7 +1884,7 @@ SOURCE_MAP.txt показывает старый путь и его место �
     Write-JsonUtf8 $DirectoryManifestPath @($DirectoryManifest) 20
 
     $Integrity = [PSCustomObject]@{
-        ToolVersion = "1.3.0"
+        ToolVersion = "1.3.1"
         MissingSceneReferencesCount = @($scan.Missing).Count
         MissingSceneReferences = @($scan.Missing)
         RemoteDependenciesCount = @($scan.Remote).Count
@@ -1906,7 +1906,7 @@ SOURCE_MAP.txt показывает старый путь и его место �
 
     # Runtime audit generated from the actual machine used for backup.
     $runtimeAudit = @"
-OBS FULL CLONE v1.3.0 - RUNTIME AUDIT
+OBS FULL CLONE v1.3.1 - RUNTIME AUDIT
 ===================================
 
 OBS executable:
@@ -1988,7 +1988,7 @@ Account data policy: $AccountDataSummary
     $BackupReadmePath = Join-Path $IncompleteRoot "README_BACKUP.txt"
 
     @"
-OBS Full Clone v1.3.0 backup
+OBS Full Clone v1.3.1 backup
 ==========================
 
 Создан:
@@ -2054,7 +2054,7 @@ Backup может содержать приватные данные и не п�
 
     # Complete=false until full validation has succeeded.
     $Status = [PSCustomObject]@{
-        ToolVersion = "1.3.0"
+        ToolVersion = "1.3.1"
         Complete = $false
         CreatedAt = (Get-Date).ToString("o")
         MetadataHashesSHA256 = $metadataHashesSha
@@ -2319,7 +2319,7 @@ catch {
     ) {
         try {
             $failedStatus = [PSCustomObject]@{
-                ToolVersion = "1.3.0"
+                ToolVersion = "1.3.1"
                 Complete = $false
                 FailedAt = (Get-Date).ToString("o")
                 Error = $_.Exception.Message

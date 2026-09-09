@@ -1,8 +1,60 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.0 - Non-destructive self test
+# OBS Full Clone Tool v1.3.1 - Non-destructive self test
+param([switch]$Detailed)
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
+
+# Capture the existing diagnostics in a child process, including direct console
+# progress writes. The same full test suite runs in both display modes.
+if (-not $Detailed) {
+    $process = $null
+    try {
+        Write-Host 'Проверка инструмента...' -ForegroundColor Cyan
+        $logDirectory = Join-Path $env:LOCALAPPDATA 'OBSback\Logs'
+        [void][IO.Directory]::CreateDirectory($logDirectory)
+        $logPath = Join-Path $logDirectory 'self-test.log'
+        $info = New-Object Diagnostics.ProcessStartInfo
+        $info.FileName = Join-Path $PSHOME 'powershell.exe'
+        $info.Arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '" -Detailed'
+        $info.UseShellExecute = $false
+        $info.CreateNoWindow = $true
+        $info.RedirectStandardOutput = $true
+        $info.RedirectStandardError = $true
+        $info.RedirectStandardInput = $true
+        $info.StandardOutputEncoding = New-Object Text.UTF8Encoding($false)
+        $info.StandardErrorEncoding = New-Object Text.UTF8Encoding($false)
+        $process = New-Object Diagnostics.Process
+        $process.StartInfo = $info
+        [void]$process.Start()
+        $process.StandardInput.Close()
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        $process.WaitForExit()
+        $details = $stdout.Result + $stderr.Result
+        [IO.File]::WriteAllText($logPath,((Get-Date).ToString('o') + "`r`n" + $details),(New-Object Text.UTF8Encoding($true)))
+        if ($process.ExitCode -eq 0 -and $details.Contains('SELF-TEST PASSED')) {
+            Write-Host 'Проверка пройдена. Ошибок нет.' -ForegroundColor Green
+            exit 0
+        }
+        $failure = [regex]::Match($details,'(?m)^SELF-TEST FAIL: ([^\r\n]+)')
+        $reason = 'Не удалось завершить все проверки.'
+        if ($failure.Success) { $reason = $failure.Groups[1].Value }
+        if ($reason.Length -gt 240) { $reason = $reason.Substring(0,240) + '...' }
+        Write-Host ('Проверка не пройдена: ' + $reason) -ForegroundColor Red
+        Write-Host ('Подробности: ' + $logPath)
+        exit 1
+    }
+    catch {
+        $reason = ($_.Exception.Message -split '\r?\n')[0]
+        Write-Host ('Ошибка самопроверки: ' + $reason) -ForegroundColor Red
+        exit 1
+    }
+    finally {
+        if ($null -ne $process) { $process.Dispose() }
+    }
+}
 
 $tempRoot = $null
 $selfTestTempBase = [IO.Path]::GetFullPath($env:TEMP)
@@ -35,7 +87,7 @@ function Pass([string]$Message) {
 }
 
 try {
-    Write-Host "OBS Full Clone v1.3.0 - self-test" -ForegroundColor Cyan
+    Write-Host "OBS Full Clone v1.3.1 - self-test" -ForegroundColor Cyan
 
     if ($PSVersionTable.PSVersion.Major -lt 5) {
         Fail "Требуется Windows PowerShell 5.1+."
@@ -488,8 +540,8 @@ try {
             (Join-Path $PSScriptRoot $releaseFile)
         )
 
-        if ($releaseText -notmatch [regex]::Escape("v1.3.0")) {
-            Fail "Версия v1.3.0 не найдена в $releaseFile"
+        if ($releaseText -notmatch [regex]::Escape("v1.3.1")) {
+            Fail "Версия v1.3.1 не найдена в $releaseFile"
         }
 
         if ($releaseText -match $legacyPattern) {
@@ -497,7 +549,7 @@ try {
         }
     }
 
-    Pass "release version 1.3.0 everywhere"
+    Pass "release version 1.3.1 everywhere"
 
 
 
