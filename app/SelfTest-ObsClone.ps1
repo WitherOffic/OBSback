@@ -466,7 +466,7 @@ try {
         $restoreTextForUxRegression -notmatch
         [regex]::Escape("Проверять SHA-256? Y/N [Y]") -or
         $restoreTextForUxRegression -notmatch
-        [regex]::Escape("-SkipShaVerification $ShaVerificationSkipped") -or
+        [regex]::Escape('-SkipShaVerification $ShaVerificationSkipped') -or
         $restoreTextForUxRegression -notmatch
         [regex]::Escape("СТРУКТУРНАЯ ПРОВЕРКА BACKUP НЕ ПРОШЛА") -or
         $restoreTextForUxRegression -notmatch
