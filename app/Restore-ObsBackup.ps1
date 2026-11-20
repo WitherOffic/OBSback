@@ -362,7 +362,7 @@ try {
     Write-Host $BackupRoot -ForegroundColor Yellow
     Write-Host ""
 
-    Show-OverallProgress 2 "Полная проверка backup до любых изменений"
+    Show-OverallProgress 2 "Выбор режима проверки backup"
 
     $restoreEngineMetadata = @(
         "RESTORE_OBS.bat",
