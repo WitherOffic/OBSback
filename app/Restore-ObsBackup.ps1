@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.2 - Restore
+# OBS Full Clone Tool v1.3.3 - Restore
 
 . (Join-Path $PSScriptRoot "ObsClone.Common.ps1")
 
@@ -350,7 +350,7 @@ if (-not (Test-IsAdministrator)) {
 }
 
 try {
-    Write-Info "=== OBS FULL CLONE v1.3.2: ВОССТАНОВЛЕНИЕ ==="
+    Write-Info "=== OBS FULL CLONE v1.3.3: ВОССТАНОВЛЕНИЕ ==="
 
 
     Show-AuthorSupportBlock
@@ -362,7 +362,7 @@ try {
     Write-Host $BackupRoot -ForegroundColor Yellow
     Write-Host ""
 
-    Show-OverallProgress 2 "Полная проверка backup до любых изменений"
+    Show-OverallProgress 2 "Выбор режима проверки backup"
 
     $restoreEngineMetadata = @(
         "RESTORE_OBS.bat",
@@ -376,16 +376,73 @@ try {
         "BUILD_AUDIT.txt"
     )
 
-    Write-Info "Проверяю payload/Sources/manifests по SHA-256."
     Write-Info "Файлы самого Restore engine могут отличаться, если вы обновили tool."
+    Write-Host ""
+    Write-Info "Выберите режим проверки целостности backup:"
+    Write-Host "  Y — полная проверка SHA-256 (рекомендуется)." -ForegroundColor Gray
+    Write-Host "  N — пропустить SHA-256; структура и размеры всё равно проверяются." -ForegroundColor Gray
+    Write-Host ""
+
+    while ($true) {
+        $shaChoice = (
+            Read-Host "Проверять SHA-256? Y/N [Y]"
+        ).Trim().ToUpperInvariant()
+
+        if (
+            [string]::IsNullOrWhiteSpace($shaChoice) -or
+            $shaChoice -eq "Y" -or
+            $shaChoice -eq "YES" -or
+            $shaChoice -eq "Д" -or
+            $shaChoice -eq "ДА"
+        ) {
+            $ShaVerificationSkipped = $false
+            break
+        }
+
+        if (
+            $shaChoice -eq "N" -or
+            $shaChoice -eq "NO" -or
+            $shaChoice -eq "Н" -or
+            $shaChoice -eq "НЕТ"
+        ) {
+            $ShaVerificationSkipped = $true
+            break
+        }
+
+        Write-Warn "Введите Y или N. Enter — полная проверка SHA-256."
+    }
+
+    if ($ShaVerificationSkipped) {
+        Write-Warn "SHA-256 ПРОПУЩЕНА ПО ВЫБОРУ ПОЛЬЗОВАТЕЛЯ."
+        Write-Info "Проверяю структуру, обязательные файлы, каталоги, JSON и размеры."
+    }
+    else {
+        Write-Info "Проверяю payload/Sources/manifests по SHA-256."
+    }
 
     $verification = Verify-BackupPackage `
-        $BackupRoot `
-        $true `
-        $true `
-        $restoreEngineMetadata
+        -BackupRoot $BackupRoot `
+        -ShowProgress (-not $ShaVerificationSkipped) `
+        -RequireComplete $true `
+        -IgnoreMetadataRelativePaths $restoreEngineMetadata `
+        -SkipShaVerification $ShaVerificationSkipped
 
     if (-not $verification.Success) {
+        if ($ShaVerificationSkipped) {
+            Write-Host ""
+            Write-Bad "СТРУКТУРНАЯ ПРОВЕРКА BACKUP НЕ ПРОШЛА:"
+            foreach ($verifyError in @($verification.Errors)) {
+                Write-Bad ("  - " + [string]$verifyError)
+            }
+
+            throw (
+                "Backup не прошёл обязательную структурную проверку. " +
+                "Restore отменён. SHA-256 можно пропустить, но структура, JSON, " +
+                "обязательные файлы, каталоги и размеры должны быть корректными.`r`n" +
+                (@($verification.Errors) -join "`r`n")
+            )
+        }
+
         Write-Host ""
         Write-Bad "СТРОГАЯ SHA-256 ПРОВЕРКА BACKUP НЕ ПРОШЛА:"
         foreach ($verifyError in @($verification.Errors)) {
@@ -727,7 +784,7 @@ try {
         if (-not (Test-Path -LiteralPath $portableMarker -PathType Leaf)) {
             [IO.File]::WriteAllText(
                 $portableMarker,
-                "OBS Full Clone v1.3.2 portable restore`r`n",
+                "OBS Full Clone v1.3.3 portable restore`r`n",
                 (New-Object Text.UTF8Encoding($false))
             )
         }

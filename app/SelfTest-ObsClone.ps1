@@ -1,5 +1,5 @@
 ﻿#requires -Version 5.1
-# OBS Full Clone Tool v1.3.2 - Non-destructive self test
+# OBS Full Clone Tool v1.3.3 - Non-destructive self test
 param([switch]$Detailed)
 
 $ErrorActionPreference = "Stop"
@@ -87,7 +87,7 @@ function Pass([string]$Message) {
 }
 
 try {
-    Write-Host "OBS Full Clone v1.3.2 - self-test" -ForegroundColor Cyan
+    Write-Host "OBS Full Clone v1.3.3 - self-test" -ForegroundColor Cyan
 
     if ($PSVersionTable.PSVersion.Major -lt 5) {
         Fail "Требуется Windows PowerShell 5.1+."
@@ -451,16 +451,34 @@ try {
 
     Pass "new Restore engine can validate old backup payload safely"
 
+    $shaPromptIndex = $restoreTextForUxRegression.IndexOf(
+        "Проверять SHA-256? Y/N [Y]",
+        [StringComparison]::Ordinal
+    )
+    $shaVerifyIndex = $restoreTextForUxRegression.IndexOf(
+        '$verification = Verify-BackupPackage',
+        [StringComparison]::Ordinal
+    )
+
     if (
         $commonTextForMetadataRegression -notmatch
         [regex]::Escape("SkipShaVerification") -or
         $restoreTextForUxRegression -notmatch
-        [regex]::Escape("Пропустить SHA-256 и продолжить Restore? Y/N")
+        [regex]::Escape("Проверять SHA-256? Y/N [Y]") -or
+        $restoreTextForUxRegression -notmatch
+        [regex]::Escape('-SkipShaVerification $ShaVerificationSkipped') -or
+        $restoreTextForUxRegression -notmatch
+        [regex]::Escape("СТРУКТУРНАЯ ПРОВЕРКА BACKUP НЕ ПРОШЛА") -or
+        $restoreTextForUxRegression -notmatch
+        [regex]::Escape("Пропустить SHA-256 и продолжить Restore? Y/N") -or
+        $shaPromptIndex -lt 0 -or
+        $shaVerifyIndex -lt 0 -or
+        $shaPromptIndex -gt $shaVerifyIndex
     ) {
-        Fail "Optional SHA-skip fallback regression."
+        Fail "Restore SHA choice must be offered before verification; structural checks must remain mandatory."
     }
 
-    Pass "SHA failure can fall back to structural verification with Y/N"
+    Pass "Restore offers SHA choice before verification and preserves mandatory structural checks"
 
     $createTextForSourceRegression = [IO.File]::ReadAllText(
         (Join-Path $PSScriptRoot "Create-ObsBackup.ps1")
@@ -540,8 +558,8 @@ try {
             (Join-Path $PSScriptRoot $releaseFile)
         )
 
-        if ($releaseText -notmatch [regex]::Escape("v1.3.2")) {
-            Fail "Версия v1.3.2 не найдена в $releaseFile"
+        if ($releaseText -notmatch [regex]::Escape("v1.3.3")) {
+            Fail "Версия v1.3.3 не найдена в $releaseFile"
         }
 
         if ($releaseText -match $legacyPattern) {
@@ -549,7 +567,7 @@ try {
         }
     }
 
-    Pass "release version 1.3.2 everywhere"
+    Pass "release version 1.3.3 everywhere"
 
 
 
@@ -903,6 +921,47 @@ Password=SECRET_PASSWORD
         Write-JsonUtf8 (Join-Path $cleanRoot 'backup_status.json') ([PSCustomObject]@{Complete=$true; MetadataHashesSHA256=(Get-Sha256Simple (Join-Path $cleanRoot 'metadata_hashes.json'))}) 20
         $verified = Verify-BackupPackage $cleanRoot $false $true
         Assert-Privacy $verified.Success ('sanitized package verification: ' + ($verified.Errors -join '; '))
+
+        $shaChoiceFiles = @(
+            $cleanFiles |
+            Where-Object { [Int64]$_.Size -gt 0 } |
+            Select-Object -First 1
+        )
+        if ($shaChoiceFiles.Count -ne 1) {
+            Fail 'No non-empty fixture file is available for SHA-skip regression.'
+        }
+
+        $shaChoicePath = Join-Path $cleanRoot ([string]$shaChoiceFiles[0].BackupRelativePath)
+        [byte[]]$shaOriginalBytes = [IO.File]::ReadAllBytes($shaChoicePath)
+
+        try {
+            [byte[]]$shaModifiedBytes = $shaOriginalBytes.Clone()
+            $shaModifiedBytes[0] = [byte]($shaModifiedBytes[0] -bxor 1)
+            [IO.File]::WriteAllBytes($shaChoicePath, $shaModifiedBytes)
+
+            $strictSha = Verify-BackupPackage $cleanRoot $false $true
+            Assert-Privacy (-not $strictSha.Success) 'strict SHA mode accepted a modified payload file'
+
+            $skipSha = Verify-BackupPackage $cleanRoot $false $true @() $true
+            Assert-Privacy ($skipSha.Success -and $skipSha.ShaSkipped) 'skip-SHA mode rejected a same-size payload file'
+
+            [byte[]]$wrongSizeBytes = New-Object byte[] ($shaOriginalBytes.Length + 1)
+            [Array]::Copy($shaModifiedBytes, $wrongSizeBytes, $shaModifiedBytes.Length)
+            [IO.File]::WriteAllBytes($shaChoicePath, $wrongSizeBytes)
+
+            $wrongSize = Verify-BackupPackage $cleanRoot $false $true @() $true
+            Assert-Privacy (-not $wrongSize.Success) 'skip-SHA mode ignored an incorrect file size'
+
+            Remove-Item -LiteralPath $shaChoicePath -Force
+            $missingFile = Verify-BackupPackage $cleanRoot $false $true @() $true
+            Assert-Privacy (-not $missingFile.Success) 'skip-SHA mode ignored a missing payload file'
+        }
+        finally {
+            [IO.File]::WriteAllBytes($shaChoicePath, $shaOriginalBytes)
+        }
+
+        Pass 'runtime: SHA skip still enforces file presence and exact sizes'
+
         $restored = Join-Path $FixtureRoot 'restored-config'
         Copy-BackupCategoryToTarget $cleanRoot $cleanFiles $cleanDirs 'Config' $restored 'Restore clean fixture'
         Assert-Privacy ((Test-JsonFilesValid $restored).Success) 'restored sanitized JSON invalid'
